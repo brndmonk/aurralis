@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  name           String
+  email          String         @unique
+  passwordHash   String?
+  role           Role           @default(STAFF)
+  avatar         String?
+  phone          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  attendances    Attendance[]   @relation("MarkedBy")
+  classes        Class[]
+  documents      Document[]     @relation("UploadedBy")
+  leadActivities LeadActivity[]
+
+  @@map("users")
+}
+
+model Student {
+  id           String        @id @default(cuid())
+  name         String
+  enrollmentId String        @unique
+  classId      String?
+  parentName   String
+  parentPhone  String
+  parentEmail    String?
+  parentPassword String?
+  avatar         String?
+  dateOfBirth  DateTime?
+  gender       Gender?
+  enrolledAt   DateTime      @default(now())
+  status       StudentStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  attendances  Attendance[]
+  documents    Document[]
+  fees         Fee[]
+  class        Class?        @relation(fields: [classId], references: [id])
+
+  @@map("students")
+}
+
+model Class {
+  id        String    @id @default(cuid())
+  name      String
+  section   String?
+  teacherId String?
+  capacity  Int       @default(30)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  teacher   User?     @relation(fields: [teacherId], references: [id])
+  students  Student[]
+
+  @@map("classes")
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  studentId  String
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  markedById String?
+  note       String?
+  createdAt  DateTime         @default(now())
+  markedBy   User?            @relation("MarkedBy", fields: [markedById], references: [id])
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@map("attendances")
+}
+
+model Fee {
+  id          String    @id @default(cuid())
+  studentId   String
+  amount      Float
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      FeeStatus @default(PENDING)
+  description String?
+  receiptUrl  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("fees")
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  type        EventType @default(OTHER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("events")
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  name         String
+  url          String
+  mimeType     String?
+  size         Int?
+  uploadedById String?
+  studentId    String?
+  createdAt    DateTime @default(now())
+  student      Student? @relation(fields: [studentId], references: [id])
+  uploadedBy   User?    @relation("UploadedBy", fields: [uploadedById], references: [id])
+
+  @@map("documents")
+}
+
+model Lead {
+  id           String         @id @default(cuid())
+  parentName   String
+  childName    String
+  childAge     Float
+  childProgram String
+  email        String?
+  phone        String?
+  status       LeadStatus     @default(NEW)
+  leadScore    Int            @default(50)
+  intentLevel  String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  activities   LeadActivity[]
+
+  @@map("leads")
+}
+
+model LeadActivity {
+  id           String       @id @default(cuid())
+  leadId       String
+  type         ActivityType
+  text         String
+  date         DateTime     @default(now())
+  scheduledFor DateTime?
+  createdById  String?
+  createdAt    DateTime     @default(now())
+  createdBy    User?        @relation(fields: [createdById], references: [id])
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_activities")
+}
+
+model SystemSettings {
+  id              String   @id @default(cuid())
+  academicYear    String   @default("2023 - 2024")
+  currentTerm     String   @default("Term 1 (Autumn)")
+  startDate       DateTime @default(dbgenerated("CURRENT_DATE"))
+  endDate         DateTime @default(dbgenerated("CURRENT_DATE + interval '1 year'"))
+  stripeEnabled   Boolean  @default(false)
+  razorpayEnabled Boolean  @default(false)
+  twilioEnabled   Boolean  @default(false)
+  resendEnabled   Boolean  @default(false)
+  webhooksEnabled Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model FeeTemplate {
+  id             String   @id @default(cuid())
+  type           String
+  frequency      String
+  frequencyColor String   @default("text-text-secondary")
+  amount         Float
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("fee_templates")
+}
+
+model RolePermission {
+  id          String   @id @default(cuid())
+  roleName    String   @unique
+  permissions Json
+  updatedAt   DateTime @updatedAt
+
+  @@map("role_permissions")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STAFF
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  TRANSFERRED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum FeeStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
+enum EventType {
+  MEETING
+  EXHIBITION
+  HOLIDAY
+  ACTIVITY
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  TOUR_SCHEDULED
+  TOUR_COMPLETED
+  APPLICATION_SENT
+  WAITLIST
+  ENROLLED
+  LOST
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  TOUR
+  NOTE
+  SYSTEM
+}

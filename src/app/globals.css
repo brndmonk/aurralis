@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Aurralis Montessori Brand Colors ──────────────────────── */
+  --color-sidebar: #1a1f36;
+  /* Original dark navy sidebar */
+  --color-sidebar-hover: #252b48;
+  /* Hover state */
+  --color-sidebar-active: rgba(32, 201, 186, 0.15);
+  /* Teal active highlight */
+
+  /* Primary brand purple */
+  --color-accent: #20C9BA;
+  /* Teal accent (logo wave color) */
+  --color-accent-light: #E8FAF8;
+  /* Pale teal backgrounds */
+  --color-accent-dark: #17A99B;
+  /* Darker teal */
+
+  /* Brand purple tokens */
+  --color-brand: #5B3FA0;
+  /* Primary purple from logo */
+  --color-brand-light: #F3EFFC;
+  /* Lavender background */
+  --color-brand-dark: #3B2878;
+  /* Darker purple */
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-alt: #F7F5FB;
+  /* Soft lavender-white (brand bg) */
+  --color-border: #E8E4F0;
+  /* Lavender border */
+  --color-border-light: #F0EDF8;
+  /* Lighter lavender border */
+
+  /* Text */
+  --color-text-primary: #1A1035;
+  /* Near-black with purple tint */
+  --color-text-secondary: #6B6080;
+  /* Muted purple-grey */
+  --color-text-muted: #B8AED0;
+  /* Placeholder / disabled */
+
+  /* Semantic */
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #4A90D9;
+  /* Brand blue */
+  --color-success: #22c55e;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-alt);
+    color: var(--color-text-primary);
+  }
+}
+
+/* ─── Scrollbar Styles ──────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ─── Animations ────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+/* Stagger children animations */
+.stagger-children>* {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-children>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger-children>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger-children>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger-children>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger-children>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.stagger-children>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+/* ─── Card Styles ───────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border-light);
+  box-shadow: 0 1px 3px rgba(91, 63, 160, 0.04), 0 1px 2px rgba(91, 63, 160, 0.02);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 20px rgba(91, 63, 160, 0.08), 0 2px 6px rgba(91, 63, 160, 0.04);
+}
+
+/* ─── Badge Styles ──────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.badge-brand {
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+}
+
+/* ─── Table Styles ──────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover td {
+  background: var(--color-brand-light);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
