@@ -77,9 +77,16 @@ export default function LoginScreen() {
                 return;
             }
 
-            // Both failed — try demo fallback
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error || 'Invalid credentials');
+            // Both failed — pick the most useful error message
+            const parentErr = await res.json().catch(() => ({}));
+            const teacherErr = await teacherRes.json().catch(() => ({}));
+            const msg =
+                parentErr.error?.includes('not activated')
+                    ? parentErr.error
+                    : teacherErr.error?.includes('not activated')
+                    ? teacherErr.error
+                    : 'Invalid email or password.';
+            throw new Error(msg);
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Login failed';
             Alert.alert('Sign in failed', msg);

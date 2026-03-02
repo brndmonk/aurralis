@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter, useSegments } from 'expo-router';
 
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export interface SessionUser {
     studentId?: string;
     userId?: string;        // teacher's User.id
@@ -24,6 +26,11 @@ export interface SessionUser {
     classId?: string | null;
     className?: string | null;
     classes?: { id: string; name: string; section: string | null; displayName: string; studentCount: number }[];
+}
+
+interface StoredSession {
+    user: SessionUser;
+    expiresAt: number;
 }
 
 interface AuthContextType {
@@ -69,7 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         SecureStore.getItemAsync('user-session').then(sess => {
             if (sess) {
                 try {
-                    setUser(JSON.parse(sess));
+                    const stored: StoredSession = JSON.parse(sess);
+                    if (stored.expiresAt && Date.now() < stored.expiresAt) {
+                        setUser(stored.user);
+                    } else {
+                        // Session expired — clear it
+                        SecureStore.deleteItemAsync('user-session').catch(() => null);
+                    }
                 } catch {
                     // corrupted — ignore
                 }
@@ -81,8 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useProtectedRoute(user, isLoading);
 
     const login = async (authData: SessionUser) => {
+        const stored: StoredSession = { user: authData, expiresAt: Date.now() + SESSION_TTL_MS };
         setUser(authData);
-        await SecureStore.setItemAsync('user-session', JSON.stringify(authData));
+        await SecureStore.setItemAsync('user-session', JSON.stringify(stored));
     };
 
     const logout = async () => {
@@ -93,8 +107,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const updateUser = async (partial: Partial<SessionUser>) => {
         if (!user) return;
         const updated = { ...user, ...partial };
+        const stored: StoredSession = { user: updated, expiresAt: Date.now() + SESSION_TTL_MS };
         setUser(updated);
-        await SecureStore.setItemAsync('user-session', JSON.stringify(updated));
+        await SecureStore.setItemAsync('user-session', JSON.stringify(stored));
     };
 
     return (

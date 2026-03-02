@@ -35,4 +35,5 @@ export const ENDPOINTS = {
     events: `${API_BASE}/api/mobile/events`,
     changePassword: `${API_BASE}/api/mobile/parent/change-password`,
     avatarUpload: `${API_BASE}/api/mobile/parent/avatar`,
+    forgotPassword: `${API_BASE}/api/mobile/auth/forgot-password`,
 };

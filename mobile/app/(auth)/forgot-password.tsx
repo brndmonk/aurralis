@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, Send } from 'lucide-react-native';
+import { ENDPOINTS } from '@/constants/api';
 
 export default function ForgotPasswordScreen() {
     const [email, setEmail] = useState('');
     const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleSend = () => {
-        if (!email) { Alert.alert('Error', 'Please enter your email'); return; }
-        setSent(true);
+    const handleSend = async () => {
+        if (!email.trim()) { Alert.alert('Error', 'Please enter your email'); return; }
+        setLoading(true);
+        try {
+            await fetch(ENDPOINTS.forgotPassword, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.trim().toLowerCase() }),
+            });
+            // Always show success — API never reveals if email exists
+            setSent(true);
+        } catch {
+            Alert.alert('Error', 'Could not reach the server. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -24,7 +39,7 @@ export default function ForgotPasswordScreen() {
                     <Mail size={32} color="#20e1d0" />
                 </View>
                 <Text style={styles.title}>Forgot Password?</Text>
-                <Text style={styles.subtitle}>Enter your email and we'll send you a reset link.</Text>
+                <Text style={styles.subtitle}>Enter your email and the school admin will contact you with new credentials.</Text>
 
                 {!sent ? (
                     <>
@@ -40,16 +55,18 @@ export default function ForgotPasswordScreen() {
                                 placeholderTextColor="#94a3b8"
                             />
                         </View>
-                        <TouchableOpacity style={styles.button} onPress={handleSend}>
-                            <Send size={18} color="#0f172a" strokeWidth={2.5} />
-                            <Text style={styles.buttonText}>Send Reset Link</Text>
+                        <TouchableOpacity style={styles.button} onPress={handleSend} disabled={loading}>
+                            {loading
+                                ? <ActivityIndicator color="#0f172a" />
+                                : <><Send size={18} color="#0f172a" strokeWidth={2.5} /><Text style={styles.buttonText}>Send Reset Link</Text></>
+                            }
                         </TouchableOpacity>
                     </>
                 ) : (
                     <View style={styles.successCard}>
-                        <Text style={styles.successTitle}>Check your inbox!</Text>
+                        <Text style={styles.successTitle}>Request Received</Text>
                         <Text style={styles.successText}>
-                            We sent a password reset link to {email}. It will expire in 15 minutes.
+                            The school admin has been notified. They will contact you at {email} with new login credentials shortly.
                         </Text>
                         <TouchableOpacity style={styles.backToLogin} onPress={() => router.replace('/(auth)/login')}>
                             <Text style={styles.backToLoginText}>Back to Login</Text>
