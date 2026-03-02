@@ -3,6 +3,12 @@
     "name": "Aurralis",
     "slug": "aurralis-montessori",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/730e7ffc-9b07-44c8-8b45-501bcc0b1221"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "aurralis",
@@ -41,7 +47,8 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-updates"
     ],
     "experiments": {
       "typedRoutes": true,
