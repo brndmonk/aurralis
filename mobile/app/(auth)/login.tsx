@@ -28,6 +28,7 @@ export default function LoginScreen() {
         setLoading(true);
         try {
             // --- Try parent login first ---
+            console.log('[Login] Calling:', ENDPOINTS.mobileLogin);
             const res = await fetch(ENDPOINTS.mobileLogin, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,7 +90,8 @@ export default function LoginScreen() {
             throw new Error(msg);
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Login failed';
-            Alert.alert('Sign in failed', msg);
+            console.error('[Login] Error:', msg, 'URL:', ENDPOINTS.mobileLogin);
+            Alert.alert('Sign in failed', `${msg}\n\n(${ENDPOINTS.mobileLogin})`);
         } finally {
             setLoading(false);
         }
