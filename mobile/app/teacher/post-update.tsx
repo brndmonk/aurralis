@@ -33,7 +33,7 @@ export default function PostUpdateScreen() {
                     title: title.trim(),
                     description: message.trim(),
                     startDate: new Date().toISOString(),
-                    type: 'ANNOUNCEMENT',
+                    type: 'OTHER',
                     location: audience === 'class' ? className : 'All School',
                 }),
             });

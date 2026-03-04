@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity,
-    Image, TextInput, Alert, ActivityIndicator, Modal, FlatList, Dimensions
+    Image, TextInput, Alert, ActivityIndicator, Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,7 +9,6 @@ import { ArrowLeft, Camera, Images, X, Send, Plus, CheckCircle2 } from 'lucide-r
 import { useAuth } from '@/context/AuthContext';
 import { ENDPOINTS } from '@/constants/api';
 
-const CLASSES = ['Nursery A', 'Nursery B', 'KG 1', 'KG 2', 'Playgroup A'];
 const ACTIVITIES = ['Circle Time', 'Art & Craft', 'Story Time', 'Outdoor Play', 'Music & Rhymes', 'Show & Tell', 'Maths', 'Special Event'];
 
 const { width } = Dimensions.get('window');
@@ -17,14 +16,15 @@ const THUMB = (width - 48 - 12) / 3;
 
 export default function PhotoUploadScreen() {
     const router = useRouter();
+    const { user } = useAuth();
+    const classes = user?.classes?.map(c => c.displayName) ?? [];
     const [images, setImages] = useState<string[]>([]);
     const [caption, setCaption] = useState('');
-    const [selectedClass, setSelectedClass] = useState('Nursery A');
+    const [selectedClass, setSelectedClass] = useState(classes[0] ?? '');
     const [selectedActivity, setSelectedActivity] = useState('Art & Craft');
     const [posting, setPosting] = useState(false);
     const [posted, setPosted] = useState(false);
 
-    // ── Pick from gallery ────────────────────────────────────────────────────
     const pickImages = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -42,7 +42,6 @@ export default function PhotoUploadScreen() {
         }
     };
 
-    // ── Take a photo ─────────────────────────────────────────────────────────
     const takePhoto = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
@@ -61,7 +60,6 @@ export default function PhotoUploadScreen() {
         if (images.length === 0) { Alert.alert('No photos', 'Add at least one photo to post.'); return; }
         setPosting(true);
         try {
-            // Upload each image to the real API
             const uploadResults: string[] = [];
             for (const uri of images) {
                 const filename = uri.split('/').pop() ?? `photo_${Date.now()}.jpg`;
@@ -82,7 +80,6 @@ export default function PhotoUploadScreen() {
                 uploadResults.push(data.objectName ?? uri);
             }
 
-            // Post to events with photo summary
             await fetch(ENDPOINTS.teacherEvents, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,7 +87,7 @@ export default function PhotoUploadScreen() {
                     title: caption || `${selectedActivity} – ${selectedClass}`,
                     description: `${images.length} photo${images.length > 1 ? 's' : ''} uploaded for ${selectedActivity} | ${selectedClass}`,
                     startDate: new Date().toISOString(),
-                    type: 'PHOTO',
+                    type: 'ACTIVITY',
                     location: selectedClass,
                 }),
             });
@@ -118,7 +115,6 @@ export default function PhotoUploadScreen() {
 
     return (
         <SafeAreaView style={styles.safe}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <ArrowLeft size={24} color="#0f172a" />
@@ -128,8 +124,6 @@ export default function PhotoUploadScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-
-                {/* Upload Buttons */}
                 <View style={styles.uploadRow}>
                     <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto}>
                         <Camera size={28} color="#3b82f6" />
@@ -141,7 +135,6 @@ export default function PhotoUploadScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Image Preview Grid */}
                 {images.length > 0 && (
                     <View style={styles.previewSection}>
                         <Text style={styles.previewLabel}>{images.length} photo{images.length > 1 ? 's' : ''} selected</Text>
@@ -164,20 +157,22 @@ export default function PhotoUploadScreen() {
                     </View>
                 )}
 
-                {/* Class selector */}
-                <Text style={styles.fieldLabel}>Class</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-                    {CLASSES.map(cls => (
-                        <TouchableOpacity
-                            key={cls}
-                            style={[styles.chip, selectedClass === cls && styles.chipActive]}
-                            onPress={() => setSelectedClass(cls)}>
-                            <Text style={[styles.chipText, selectedClass === cls && styles.chipTextActive]}>{cls}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                {classes.length > 0 && (
+                    <>
+                        <Text style={styles.fieldLabel}>Class</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+                            {classes.map(cls => (
+                                <TouchableOpacity
+                                    key={cls}
+                                    style={[styles.chip, selectedClass === cls && styles.chipActive]}
+                                    onPress={() => setSelectedClass(cls)}>
+                                    <Text style={[styles.chipText, selectedClass === cls && styles.chipTextActive]}>{cls}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </>
+                )}
 
-                {/* Activity selector */}
                 <Text style={styles.fieldLabel}>Activity</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
                     {ACTIVITIES.map(act => (
@@ -190,7 +185,6 @@ export default function PhotoUploadScreen() {
                     ))}
                 </ScrollView>
 
-                {/* Caption */}
                 <Text style={styles.fieldLabel}>Caption (optional)</Text>
                 <TextInput
                     style={styles.captionInput}
@@ -203,19 +197,16 @@ export default function PhotoUploadScreen() {
                     textAlignVertical="top"
                 />
 
-                {/* Post Summary */}
                 {images.length > 0 && (
                     <View style={styles.summaryCard}>
                         <Text style={styles.summaryTitle}>Ready to post</Text>
                         <Text style={styles.summaryLine}>📸 {images.length} photo{images.length > 1 ? 's' : ''}</Text>
-                        <Text style={styles.summaryLine}>👥 {selectedClass} parents will be notified</Text>
+                        <Text style={styles.summaryLine}>👥 {selectedClass || 'All classes'} parents will be notified</Text>
                         <Text style={styles.summaryLine}>🎨 Activity: {selectedActivity}</Text>
                     </View>
                 )}
-
             </ScrollView>
 
-            {/* Post Button */}
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.postBtn, (images.length === 0 || posting) && styles.postBtnDisabled]}

@@ -90,8 +90,13 @@ export default function LoginScreen() {
             throw new Error(msg);
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Login failed';
-            console.error('[Login] Error:', msg, 'URL:', ENDPOINTS.mobileLogin);
-            Alert.alert('Sign in failed', `${msg}\n\n(${ENDPOINTS.mobileLogin})`);
+            const isNetworkError = msg.toLowerCase().includes('network') || msg.toLowerCase().includes('failed to fetch');
+            Alert.alert(
+                'Sign in failed',
+                isNetworkError
+                    ? 'Could not connect to the server. Please check your internet connection and try again.'
+                    : msg
+            );
         } finally {
             setLoading(false);
         }
