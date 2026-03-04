@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
-function hashPassword(pw: string): string {
-    return createHash("sha256").update(`aurralis:${pw}`).digest("hex");
-}
 
 export async function POST(request: Request) {
     try {
@@ -32,14 +28,16 @@ export async function POST(request: Request) {
             if (!currentPassword) {
                 return NextResponse.json({ error: "Current password is required" }, { status: 400 });
             }
-            if (hashPassword(currentPassword) !== student.parentPassword) {
+            const valid = await compare(currentPassword, student.parentPassword);
+            if (!valid) {
                 return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
             }
         }
 
+        const newHash = await hash(newPassword, 12);
         await prisma.student.update({
             where: { id: studentId },
-            data: { parentPassword: hashPassword(newPassword) },
+            data: { parentPassword: newHash },
         });
 
         return NextResponse.json({ success: true });

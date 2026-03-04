@@ -73,7 +73,7 @@ export default function PhotoUploadScreen() {
                 const res = await fetch(ENDPOINTS.teacherUpload, {
                     method: 'POST',
                     body: formData,
-                    headers: { 'Content-Type': 'multipart/form-data' },
+                    // Do NOT set Content-Type — React Native sets it automatically with the correct boundary
                 });
                 if (!res.ok) throw new Error(`Upload failed for ${filename}`);
                 const data = await res.json();

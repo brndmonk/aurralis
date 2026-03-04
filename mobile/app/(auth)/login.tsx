@@ -28,7 +28,6 @@ export default function LoginScreen() {
         setLoading(true);
         try {
             // --- Try parent login first ---
-            console.log('[Login] Calling:', ENDPOINTS.mobileLogin);
             const res = await fetch(ENDPOINTS.mobileLogin, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
